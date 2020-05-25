@@ -1,5 +1,6 @@
 .envrc
 .direnv
-.png
-.jpg
-.pyc
+*.png
+*.jpg
+*.pyc
+.DS_Store
