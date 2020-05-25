@@ -16,7 +16,7 @@ def random_coords(shape, size):
 def draw_square(img, coords):
     p1, p2 = coords
     img = cv2.rectangle(img, p1, p2,(0,127,127),2)
-    return img
+    cv2.imwrite('img_square.png',img)
 
 
 def crop_square(img, coord):
@@ -40,7 +40,12 @@ def draw_pixel_values(img, size):
     plt.savefig('pixels.png')
 
 
-def split_channels(img):
+def split_channels(img, offset):
+    rows, cols = img.shape[:2]
+    img = cv2.resize(img,(int(cols*.3),int(rows*.3)))
+    rows, cols = img.shape[:2]
+
+    #split colors
     blue = img.copy()
     blue[:,:,1] = 0
     blue[:,:,2] = 0
@@ -52,29 +57,40 @@ def split_channels(img):
     red = img.copy()
     red[:,:,0] = 0
     red[:,:,1] = 0
-    splitted_channels = cv2.hconcat([blue,green,red])
-    cv2.imwrite('color_channels.png', splitted_channels)
+
+    #create a blank background
+    bgd = 255 * np.ones((rows+offset*2,cols+offset*2,3), np.uint8)
+
+    #plot the color channels
+    bgd[0:rows, 0:cols] = red
+    bgd[offset:rows+offset, offset:cols+offset] = green
+    bgd[offset*2:rows+offset*2, offset*2:cols+offset*2] = blue
+    cv2.imwrite('channel_colors.png', bgd)
+
+    # channel intensities
+    b,g,r = cv2.split(img)
+    channel_intensities = cv2.vconcat([b,g,r])
+    cv2.imwrite('channel_intensities.png', channel_intensities)
 
 
 if __name__ == '__main__':
 
-    
     img = cv2.imread(sys.argv[1])
     square_size = 100
+    offset = 50
+   
+    #select a random squared region
     coords = random_coords(img.shape, square_size)
-    img_with_square = draw_square(img.copy(), coords)
-    cv2.imwrite('img_square.png',img_with_square)
-
+    draw_square(img.copy(), coords)
     square = crop_square(img, coords) 
 
     #reduce square to 10% for better pixel visualization
     resize_ratio = .1
-    y,x = square.shape[:2]
-    square_resized = cv2.resize(square,(int(y*resize_ratio),int(x*resize_ratio)))
+    rows,cols = square.shape[:2]
+    square_resized = cv2.resize(square,(int(rows*resize_ratio),int(cols*resize_ratio)))
 
     #convert to grayscale and draw pixel values
     gray_square = cv2.cvtColor(square_resized, cv2.COLOR_BGR2GRAY)
     draw_pixel_values(gray_square, int(square_size*resize_ratio))
 
-    split_channels(img)
-    #b,g,r = cv2.split(gray_square)
+    split_channels(img, offset)
