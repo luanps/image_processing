@@ -73,12 +73,26 @@ def split_channels(img, offset):
     cv2.imwrite('channel_intensities.png', channel_intensities)
 
 
+def edge_detection(img):
+    #convolution matrix
+    edge_convolution = np.array(([-1,-1,-1],[-1,8,-1],[-1,-1,-1]),dtype='int')
+
+    #convert to grayscale
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    #apply filter
+    transformed_img = cv2.filter2D(gray_img,-1, edge_convolution)
+    cv2.imwrite('transformed_img.png',transformed_img)
+    cv2.imwrite('grayscale_img.png',gray_img)
+
+
 if __name__ == '__main__':
 
     img = cv2.imread(sys.argv[1])
     square_size = 100
     offset = 50
-   
+
+
     #select a random squared region
     coords = random_coords(img.shape, square_size)
     draw_square(img.copy(), coords)
@@ -89,8 +103,12 @@ if __name__ == '__main__':
     rows,cols = square.shape[:2]
     square_resized = cv2.resize(square,(int(rows*resize_ratio),int(cols*resize_ratio)))
 
-    #convert to grayscale and draw pixel values
+    #convert square to grayscale and draw pixel values on it
     gray_square = cv2.cvtColor(square_resized, cv2.COLOR_BGR2GRAY)
     draw_pixel_values(gray_square, int(square_size*resize_ratio))
 
+    # split RGB channels
     split_channels(img, offset)
+
+    #edge detector
+    edge_detection(img)
